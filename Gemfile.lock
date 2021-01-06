@@ -1,0 +1,30 @@
+GEM
+  remote: https://rubygems.org/
+  specs:
+    assert (2.19.2)
+      much-factory (~> 0.2.0)
+      much-not-given (~> 0.1.1)
+      much-stub (~> 0.1.6)
+    coderay (1.1.3)
+    method_source (1.0.0)
+    much-factory (0.2.0)
+    much-not-given (0.1.1)
+      much-plugin (~> 0.2.3)
+    much-plugin (0.2.3)
+    much-stub (0.1.6)
+    pry (0.13.1)
+      coderay (~> 1.1)
+      method_source (~> 1.0)
+
+PLATFORMS
+  ruby
+
+DEPENDENCIES
+  assert (~> 2.19.2)
+  pry
+
+RUBY VERSION
+   ruby 2.5.5p157
+
+BUNDLED WITH
+   2.1.4
