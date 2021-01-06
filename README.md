@@ -2,6 +2,14 @@
 
 A test runner. Run locally configured test commands via a generic command with standard options/features.
 
+## Install
+
+Open a terminal and run this command ([view source](https://git.io/t.rb--install)):
+
+```
+$ curl -L https://git.io/t.rb--install | sh
+```
+
 ## Usage
 
 ```
@@ -192,10 +200,18 @@ Optional. A String containing a list of default ENV_VAR names/values to run on b
 
 [Git](https://git-scm.com/).
 
-## Install
-
-TODO
-
 ## Uninstall
 
-TODO
+Open a terminal and run this command ([view source](http://git.io/t.rb--uninstall)):
+
+```
+$ curl -L http://git.io/t.rb--uninstall | sh
+```
+
+## Contributing
+
+1. Fork it
+2. Create your feature branch (`git checkout -b my-new-feature`)
+3. Commit your changes (`git commit -am 'Added some feature'`)
+4. Push to the branch (`git push origin my-new-feature`)
+5. Create new Pull Request
