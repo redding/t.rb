@@ -1,6 +1,6 @@
 # t.rb
 
-A test runner. Run locally configured test commands via a generic command with standard options/features.
+A test runner. Run locally configured test commands via a generic CLI with standard options/features.
 
 ## Install
 
@@ -135,7 +135,7 @@ parallel_env_var_name: "PARALLEL_WORKERS"
 env_vars: "USE_SIMPLE_COV=0"
 ```
 
-The only required value s: `default_cmd:` - all others are optional:
+The only required value is: `default_cmd:` - all others are optional:
 
 ```yaml
 default_cmd: "MINITEST_REPORTER=ProgressReporter ./bin/rake test"
