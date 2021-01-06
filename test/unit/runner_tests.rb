@@ -30,17 +30,15 @@ class TdotRB::Runner
       @verbose_cmd  = Factory.string
       @seed_env_var_name = Factory.string
       @env_vars          = "#{Factory.string.upcase}=#{Factory.string}"
-      Assert.stub(@config, :suites) do
-        [
-          TdotRB::Config::Suite.new(
-            default_cmd:  @default_cmd,
-            verbose_cmd:  @verbose_cmd,
-            seed_env_var_name: @seed_env_var_name,
-            env_vars:          @env_vars,
-          )
-        ]
-      end
-
+      @suites = [
+        TdotRB::Config::Suite.new(
+          default_cmd:  @default_cmd,
+          verbose_cmd:  @verbose_cmd,
+          seed_env_var_name: @seed_env_var_name,
+          env_vars:          @env_vars,
+        )
+      ]
+      Assert.stub(@config, :suites) { @suites }
       @test_paths = [""]
     end
   end

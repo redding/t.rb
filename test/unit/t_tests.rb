@@ -13,8 +13,8 @@ module TdotRB
     should have_imeths :config, :apply, :bench, :run
 
     should "know its config singleton" do
-      assert_instance_of Config, subject.config
-      assert_same subject.config, subject.config
+      assert_that(subject.config).is_instance_of(subject::Config)
+      assert_that(subject.config).is(subject.config)
     end
   end
 end

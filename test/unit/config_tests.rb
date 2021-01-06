@@ -31,11 +31,10 @@ class TdotRB::Config
     should have_imeths :bench, :bench_start_msg, :bench_finish_msg
 
     should "know its stdout" do
-      assert_same $stdout, subject.stdout
+      assert_that(subject.stdout).is($stdout)
 
       io     = StringIO.new(+"")
-      config = unit_class.new(io)
-      assert_same io, config.stdout
+      assert_that(unit_class.new(io).stdout).is_the_same_as(io)
     end
 
     should "default to having no suites" do
