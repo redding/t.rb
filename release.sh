@@ -1,6 +1,6 @@
 #!/bin/sh
 
-T_RELEASE="0.0.1"
+T_RELEASE="0.1.0" # also update in install.sh and libexec/t.rb
 
 # check uncommitted changes
 
