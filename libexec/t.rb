@@ -351,9 +351,10 @@ module TdotRB
   end
 
   def self.apply(argv)
+    config.load_suites
+
     clirb.parse!(argv)
     config.apply(clirb.opts)
-    config.load_suites
   end
 
   def self.bench(*args, &block)
