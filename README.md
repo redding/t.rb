@@ -12,6 +12,21 @@ $ curl -L https://git.io/t.rb--install | sh
 
 ## Usage
 
+Given a `./.t.yml` in your project's root, e.g.:
+
+```yaml
+default_cmd: "MINITEST_REPORTER=ProgressReporter ./bin/rake test"
+verbose_cmd: "MINITEST_REPORTER=SpecReporter ./bin/rake test"
+test_dir: "test"
+test_file_suffixes:
+  - "_test.rb"
+seed_env_var_name: "SEED"
+parallel_env_var_name: "PARALLEL_WORKERS"
+env_vars: "USE_SIMPLE_COV=0"
+```
+
+Then:
+
 ```
 $ cd my/project
 $ t -h
@@ -121,19 +136,6 @@ SEED=00000 MINITEST_REPORTER=ProgressReporter ./bin/rake test test/thing1_test.r
 Force a specific seed value for the test run.
 
 ## Configuration
-
-Add a `./.t.yml` in your project's root:
-
-```yaml
-default_cmd: "MINITEST_REPORTER=ProgressReporter ./bin/rake test"
-verbose_cmd: "MINITEST_REPORTER=SpecReporter ./bin/rake test"
-test_dir: "test"
-test_file_suffixes:
-  - "_test.rb"
-seed_env_var_name: "SEED"
-parallel_env_var_name: "PARALLEL_WORKERS"
-env_vars: "USE_SIMPLE_COV=0"
-```
 
 The only required value is: `default_cmd:` - all others are optional:
 
