@@ -1,3 +1,7 @@
+## 0.1.1 / 2021-01-11
+
+* Fix `t.rb` working in sub-directories of the git repo 16bffad09c0bb5a9531de23a47316904c87f36a9
+
 ## 0.1.0 / 2021-01-06
 
 * meta plus initial README 237bf42da8c187bc8e1354442e0a6a572abe3b83
