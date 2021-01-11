@@ -243,8 +243,8 @@ module TdotRB
 
   module GitChangedFiles
     def self.cmd(config, test_paths)
-      [ "git diff --no-ext-diff --name-only #{config.changed_ref}", # changed files
-        "git ls-files --others --exclude-standard"                  # added files
+      [ "git diff --no-ext-diff --relative --name-only #{config.changed_ref}", # changed files
+        "git ls-files --others --exclude-standard"                             # added files
       ].map{ |c| "#{c} -- #{test_paths.join(" ")}" }.join(" && ")
     end
 
