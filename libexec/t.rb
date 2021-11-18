@@ -262,7 +262,7 @@ module TdotRB
     end
   end
 
-  class CLIRB  # Version 1.1.0, https://github.com/redding/cli.rb
+  class CLIRB  # Version 1.2.0, https://github.com/redding/cli.rb
     Error    = Class.new(RuntimeError);
     HelpExit = Class.new(RuntimeError); VersionExit = Class.new(RuntimeError)
     attr_reader :argv, :args, :opts, :data
@@ -279,7 +279,7 @@ module TdotRB
       end
     end
 
-    def option(*args); @options << Option.new(*args); end
+    def option(*args, **kargs); @options << Option.new(*args, **kargs); end
     def parse!(argv)
       @args = (argv || []).dup.tap do |args_list|
         begin; @parser.parse!(args_list)
@@ -320,29 +320,49 @@ module TdotRB
 
   def self.clirb
     @clirb ||= CLIRB.new do
-      option "seed_value", "use a given seed to run tests", {
-        abbrev: "s", value: Integer
-      }
-      option "changed_only", "only run test files with changes", {
-        abbrev: "c"
-      }
-      option "changed_ref", "reference for changes, use with `-c` opt", {
-        abbrev: "r", value: ""
-      }
-      option "parallel_workers", "number of parallel workers to use (if applicable)", {
-        abbrev: "p", value: Integer
-      }
-      option "verbose", "output verbose runtime test info", {
-        abbrev: "v"
-      }
-      option "dry_run", "output the test command to $stdout"
-      option "list", "list test files on $stdout", {
-        abbrev: "l"
-      }
+      option(
+        "seed_value",
+        "use a given seed to run tests",
+        abbrev: "s",
+        value: Integer,
+      )
+      option(
+        "changed_only",
+        "only run test files with changes",
+        abbrev: "c",
+      )
+      option(
+        "changed_ref",
+        "reference for changes, use with `-c` opt",
+        abbrev: "r",
+        value: "",
+      )
+      option(
+        "parallel_workers",
+        "number of parallel workers to use (if applicable)",
+        abbrev: "p",
+        value: Integer,
+      )
+      option(
+        "verbose",
+        "output verbose runtime test info",
+        abbrev: "v",
+      )
+      option(
+        "dry_run",
+        "output the test command to $stdout",
+      )
+      option(
+        "list",
+        "list test files on $stdout",
+        abbrev: "l",
+      )
       # show loaded test files, cli err backtraces, etc
-      option "debug", "run in debug mode", {
-        abbrev: "d"
-      }
+      option(
+        "debug",
+        "run in debug mode",
+        abbrev: "d",
+      )
     end
   end
 
