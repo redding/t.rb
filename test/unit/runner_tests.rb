@@ -149,7 +149,7 @@ class TdotRB::Runner
     should "run a git cmd to determine which files to test" do
       subject.run
 
-      exp = "git diff --no-ext-diff --name-only #{@changed_ref} "\
+      exp = "git diff --no-ext-diff --relative --name-only #{@changed_ref} "\
             "-- #{@test_paths.join(" ")} && "\
             "git ls-files --others --exclude-standard "\
             "-- #{@test_paths.join(" ")}"
