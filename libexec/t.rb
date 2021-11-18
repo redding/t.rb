@@ -408,6 +408,17 @@ module TdotRB
   end
 end
 
+unless ::Hash.method_defined?(:transform_keys)
+  class ::Hash
+    def transform_keys(&block)
+      reduce({}) do |acc, (key, value)|
+        acc[block.call(key)] = value
+        acc
+      end
+    end
+  end
+end
+
 unless ENV["TDOTRB_DISABLE_RUN"]
   TdotRB.run
 end
