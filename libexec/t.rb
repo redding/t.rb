@@ -7,7 +7,7 @@ require "set"
 require "yaml"
 
 module TdotRB
-  VERSION = "0.1.1"
+  VERSION = "0.1.2"
 
   class Config
     SUITES_FILE_PATH = "./.t.yml"

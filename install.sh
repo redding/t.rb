@@ -3,7 +3,7 @@
 set -e
 
 T_HOME_DIR="$HOME/.t.rb"
-T_RELEASE="0.1.1"
+T_RELEASE="0.1.2"
 
 # make sure the bin path is in place
 

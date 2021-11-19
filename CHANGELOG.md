@@ -1,3 +1,9 @@
+## 0.1.2 / 2021-11-19
+
+* backport Hash#transform_keys to support Ruby 2.4+ fcb4955
+* update to work with Ruby 3+ 918b196
+* fix the tests from PR 1 1c238ee
+
 ## 0.1.1 / 2021-01-11
 
 * Fix `t.rb` working in sub-directories of the git repo 16bffad09c0bb5a9531de23a47316904c87f36a9
