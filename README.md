@@ -6,8 +6,10 @@ A test runner. Run locally configured test commands via a generic CLI with stand
 
 Open a terminal and run this command ([view source](https://git.io/t.rb--install)):
 
+(change PREFIX as needed; it defaults to `/usr/local`)
+
 ```
-$ curl -L https://git.io/t.rb--install | sh
+$ curl -L https://git.io/t.rb--install | PREFIX=/usr/local sh
 ```
 
 ## Usage
