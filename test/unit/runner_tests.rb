@@ -49,10 +49,48 @@ class TdotRB::Runner
     end
 
     should have_readers :test_paths, :config
+    should have_imeths :run, :run_suite, :execute_cmd
 
     should "know its attribtes" do
       assert_that(subject.test_paths).equals(@test_paths)
       assert_that(subject.config).is(@config)
+    end
+  end
+
+  class ExecuteResultTests < InitSetupTests
+    desc "and configured to execute the test cmd"
+    setup do
+      @executed_cmds = []
+      @runner = unit_class.new(@test_paths, config: @config)
+      Assert.stub(@runner, :execute_cmd) do |cmd_str|
+        @executed_cmds << cmd_str
+        @execute_result
+      end
+    end
+
+    should "return true when the test cmd succeeds" do
+      @execute_result = true
+
+      assert_that(subject.run).is_true
+      assert_that(@executed_cmds).is_not_empty
+    end
+
+    should "return false when the test cmd fails" do
+      @execute_result = false
+
+      assert_that(subject.run).is_false
+    end
+
+    should "run the remaining suites after one fails" do
+      Assert.stub(@config, :suites) { [@suites.first, @suites.first] }
+      @runner = unit_class.new(@test_paths, config: @config)
+      Assert.stub(@runner, :execute_cmd) do |cmd_str|
+        @executed_cmds << cmd_str
+        false
+      end
+
+      assert_that(subject.run).is_false
+      assert_that(@executed_cmds.size).equals(2)
     end
   end
 

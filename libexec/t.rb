@@ -128,9 +128,10 @@ module TdotRB
     end
 
     def run
-      @config.suites.each do |suite|
-        run_suite(suite)
-      end
+      # Every suite runs even after one fails, so a failing suite never hides
+      # the results of the suites behind it. The accumulated result is what the
+      # CLI exits on.
+      @config.suites.reduce(true) { |success, suite| run_suite(suite) && success }
     end
 
     def run_suite(suite)
@@ -152,11 +153,19 @@ module TdotRB
       end
 
       if execute_cmd_str?(test_files)
-        system(cmd_str)
+        execute_cmd(cmd_str)
       else
         config.puts test_files.join("\n") if config.list
         config.puts cmd_str               if config.dry_run
+        true
       end
+    end
+
+    # The single place a test subprocess is spawned, named so the result can be
+    # observed. Kernel#system is private, so calling it inline leaves no seam a
+    # test can stub.
+    def execute_cmd(cmd_str)
+      system(cmd_str)
     end
 
     private
@@ -384,7 +393,9 @@ module TdotRB
   def self.run
     begin
       bench("ARGV parse and configure"){ apply(ARGV) }
-      Runner.new(clirb.args, config: config).run
+      # Exit non-zero when any test suite failed, so `t` can gate a commit hook
+      # or a CI step instead of only reporting to stdout.
+      exit(1) unless Runner.new(clirb.args, config: config).run
     rescue CLIRB::HelpExit
       config.puts help_msg
     rescue CLIRB::VersionExit
