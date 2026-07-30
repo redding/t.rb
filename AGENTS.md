@@ -1,50 +1,89 @@
-# t.rb — notes for agents and non-interactive shells
+# t.rb — notes for agents working on this repo
 
-`t` runs the test commands a project declares in its `.t.yml`. There is no
-built-in knowledge of any particular test framework: the config supplies the
-command strings, and `t` decides which test files to hand them.
+Notes for *developing* `t.rb`. For using the tool, see the README.
 
-## Always scope the run
+## The whole program is one file
 
-`t` with no scope runs the whole suite for every configured suite, which in a
-large repo can be far more than the change warrants. Pass a scope:
+`libexec/t.rb` is it — around 435 lines, no `lib/`, no gemspec. Install
+symlinks `$PREFIX/bin/t` at that file and runs it directly.
 
-- `t -c` — only test files with uncommitted changes
-- `t -c -r <ref>` — only test files changed against a ref
-- `t <file> [<file>...]` — an explicit list
-- `t <dir>` — everything under a directory
+Two constraints follow:
 
-## `-c` reads the working tree, not the branch
+- **Stdlib only at runtime.** The file requires `benchmark`, `set`, and
+  `yaml` and nothing else. `pry` and `assert` in the `Gemfile` are for
+  development; a runtime `require` of a gem would break every install, since
+  there is no bundle around the installed script.
+- **Ruby floor is real.** The file is run by whatever Ruby the user's shell
+  resolves, not a pinned one. `class ::Hash` is reopened near the bottom to
+  backport a method for older interpreters — that is the shape a
+  compatibility fix takes here.
 
-`-c` means *uncommitted* changes. Once work is committed it selects nothing,
-so a post-commit `t -c` runs no tests and reports success. Use
-`-c -r <base-branch>` to cover a branch's worth of changes, or name the files.
+## Layout of that file
 
-It also selects *test files* that changed — editing an implementation file
-does not pull in the test that covers it.
+| region | role |
+|---|---|
+| `module TdotRB` | entry point — `.run`, `.apply`, `.config`, `.bench`, `.help_msg` |
+| `Config` | parses `./.t.yml`, holds CLI settings and the suite definitions |
+| `Runner` | resolves which test files to run, then runs each suite |
+| `GitChangedFiles` | the `-c` / `-r` git integration |
+| `RoundedMillisecondTime` | benchmarking helper |
+| `CLIRB` | **vendored** option parser, copied from redding/cli.rb |
+| `class ::Hash` | backport for older Rubies |
 
-## Exit status reflects the result
+Note the difference from the sibling `l.rb`: there is no `Linter`-equivalent
+class here. Suites are value objects held by `Config`, so per-suite behavior
+lives in `Config::Suite` and `Runner`, not in a class of its own.
 
-`t` exits non-zero when any suite fails, so it can gate a hook or a CI step.
-Every suite still runs after one fails, so a single failing suite does not
-suppress the results of the ones behind it.
+`CLIRB` is a verbatim copy carrying its own version comment. Fix bugs
+upstream in redding/cli.rb and re-copy rather than editing it here, or the
+next copy silently reverts the change.
 
-`--list` and `--dry-run` do not execute anything and exit zero; do not read a
-zero from those as a passing suite.
+## Requiring the file runs the CLI
 
-## Confirm what will run before trusting a pass
+The last lines are:
 
-`-l` prints the test files that would run and `--dry-run` prints the command
-without executing it. An empty file list is the most common reason a run
-"passes" without having tested anything.
+```ruby
+unless ENV["TDOTRB_DISABLE_RUN"]
+  # ... parse ARGV and run
+end
+```
 
-## Seeds are for reproducing, not for stability
+`test/helper.rb` sets `TDOTRB_DISABLE_RUN` before requiring, which is the only
+reason the suite can load the file without executing a test run — without it,
+loading the file inside a test run would kick off another test run. Anything
+else that requires `libexec/t` must do the same.
 
-`-s VALUE` pins the framework's seed. Reach for it to reproduce an ordering
-failure, not as a way to make a flaky suite look green.
+## Tests
 
-## Config lookup is per-directory
+```
+$ bundle install
+$ bundle exec assert                            # the whole suite
+$ bundle exec assert test/unit/runner_tests.rb  # one file
+```
 
-The config is `./.t.yml`, resolved from the current directory. Running `t`
-from outside a project — or from a subdirectory whose parent holds the
-config — will not find it.
+The framework is [assert](https://github.com/redding/assert), not RSpec or
+Minitest. `test/helper.rb` is auto-required.
+
+- `test/unit/*_tests.rb` mirrors the classes above one-to-one.
+- `test/support/test/` holds fixture test files (`thing1_test.rb`,
+  `thing2_test.rb`) that the file-resolution logic actually globs over.
+  **Adding a file there can change expectations in the config and runner
+  tests** — it is fixture data, not scratch space.
+- Stubbing is `Assert.stub(obj, :meth){ ... }`. It requires the receiver to
+  `respond_to?` the method, so private `Kernel` methods like `system` cannot be
+  stubbed directly — that is why command execution sits behind a named
+  `execute_cmd` method rather than calling `system` inline.
+
+Most tests drive `Runner` with `dry_run` or `list` stubbed true, so no
+subprocess is spawned. If you change execution behavior, add coverage that
+exercises the executing path — the default setup will not reach it.
+
+## Maintenance notes
+
+- The version string lives in three files and must match: `libexec/t.rb`
+  (`VERSION`), `install.sh` (`T_RELEASE`), `release.sh` (`T_RELEASE`). The
+  duplication is deliberate — `install.sh` fetches a release *tag*.
+- `CHANGELOG.md` entries carry the commit SHA of each change.
+- Release steps are in the README under `## Releasing`. Version bumps are
+  committed on `main` and tagged there, not merged through a pull request.
+- This repo has no CI. Run the suite locally before pushing; nothing else will.

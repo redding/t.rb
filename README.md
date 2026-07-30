@@ -33,10 +33,10 @@ $ t --help
 
 Open a terminal and run this command ([view source](https://raw.githubusercontent.com/redding/t.rb/main/install.sh)):
 
-(change PREFIX as needed; it defaults to `/usr/local`)
+(installs to `$HOME/.local/bin`; set `PREFIX` to override, e.g. `PREFIX=/usr/local`)
 
 ```
-$ curl -L https://raw.githubusercontent.com/redding/t.rb/main/install.sh | PREFIX=/usr/local sh
+$ curl -L https://raw.githubusercontent.com/redding/t.rb/main/install.sh | sh
 ```
 
 ## Usage
@@ -249,11 +249,15 @@ The version string lives in three places and they must match:
 
 To cut a release:
 
-1. Bump the version in all three files.
-2. Add a `CHANGELOG.md` entry — a `## <version> / <date>` heading, then one
+1. Check out `main` and make sure it is up to date. The version bump and
+   changelog entry are committed straight to `main` and tagged there — they do
+   not go through a pull request, and `release.sh` tags whatever commit is
+   checked out.
+2. Bump the version in all three files.
+3. Add a `CHANGELOG.md` entry — a `## <version> / <date>` heading, then one
    line per change ending in its commit SHA.
-3. Commit those changes.
-4. Run `./release.sh`. It refuses to run against a dirty working tree, then
+4. Commit those changes.
+5. Run `./release.sh`. It refuses to run against a dirty working tree, then
    tags the release and pushes the commits and the tag.
 
 `install.sh` fetches the tarball for the tag, so the tag must exist before the
