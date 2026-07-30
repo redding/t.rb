@@ -2,14 +2,41 @@
 
 A test runner. Run locally configured test commands via a generic CLI with standard options/features.
 
+```
+$ t                        # every configured suite
+$ t -c                     # only test files with uncommitted changes
+$ t -c -r main             # only test files changed against a ref
+$ t -v                     # use the verbose command
+$ t -l                     # list the test files that would run
+$ t test/unit/user_tests.rb  # an explicit file list
+$ t --help
+```
+
+## What It Does...
+
+**Reads a `.t.yml` config:** each suite declares a `default_cmd`, an optional
+  `verbose_cmd`, the test directory, the file suffixes that mark a test file,
+  and optional seed and ENV var settings.
+
+**Resolves which test files to run:** from explicit paths, or from git — `-c`
+  for uncommitted changes, `-r REF` against a ref — matched against the
+  configured suffixes.
+
+**Runs each suite with those files:** every suite runs even if an earlier one
+  fails, and `t` exits non-zero if any of them did.
+
+**Stays out of the way when asked:** `-l` lists the files it would run and
+  `--dry-run` prints the command without running it. Neither executes
+  anything, and both exit zero.
+
 ## Install
 
-Open a terminal and run this command ([view source](https://git.io/t.rb--install)):
+Open a terminal and run this command ([view source](https://raw.githubusercontent.com/redding/t.rb/main/install.sh)):
 
 (change PREFIX as needed; it defaults to `/usr/local`)
 
 ```
-$ curl -L https://git.io/t.rb--install | PREFIX=/usr/local sh
+$ curl -L https://raw.githubusercontent.com/redding/t.rb/main/install.sh | PREFIX=/usr/local sh
 ```
 
 ## Usage
@@ -200,17 +227,37 @@ Optional. A String containing a list of default ENV_VAR names/values to run on b
 
 ## Dependencies
 
-[Ruby](https://www.ruby-lang.org/) `~> 2.5`.
+[Ruby](https://www.ruby-lang.org/) `>= 2.5`, developed against the version in `.ruby-version`.
 
 [Git](https://git-scm.com/).
 
 ## Uninstall
 
-Open a terminal and run this command ([view source](http://git.io/t.rb--uninstall)):
+Open a terminal and run this command ([view source](https://raw.githubusercontent.com/redding/t.rb/main/uninstall.sh)):
 
 ```
-$ curl -L http://git.io/t.rb--uninstall | sh
+$ curl -L https://raw.githubusercontent.com/redding/t.rb/main/uninstall.sh | sh
 ```
+
+## Releasing
+
+The version string lives in three places and they must match:
+
+- `libexec/t.rb` — `VERSION`
+- `install.sh` — `T_RELEASE`
+- `release.sh` — `T_RELEASE`
+
+To cut a release:
+
+1. Bump the version in all three files.
+2. Add a `CHANGELOG.md` entry — a `## <version> / <date>` heading, then one
+   line per change ending in its commit SHA.
+3. Commit those changes.
+4. Run `./release.sh`. It refuses to run against a dirty working tree, then
+   tags the release and pushes the commits and the tag.
+
+`install.sh` fetches the tarball for the tag, so the tag must exist before the
+published install command resolves to the new version.
 
 ## Contributing
 
@@ -219,3 +266,14 @@ $ curl -L http://git.io/t.rb--uninstall | sh
 3. Commit your changes (`git commit -am 'Added some feature'`)
 4. Push to the branch (`git push origin my-new-feature`)
 5. Create new Pull Request
+
+### Running the tests
+
+```
+$ bundle install
+$ bundle exec assert                            # the whole suite
+$ bundle exec assert test/unit/runner_tests.rb  # one file
+```
+
+Tests run on the Ruby in `.ruby-version`. This repo is configured for `t.rb`
+itself (`.t.yml`), so `t` and `t -c` work too if you have it installed.
