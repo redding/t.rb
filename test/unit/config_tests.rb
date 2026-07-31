@@ -23,7 +23,8 @@ class TdotRB::Config
 
     let(:config) { unit_class.new }
 
-    should have_readers :stdout, :suites, :version
+    should have_readers :stdout, :suites, :version, :load_error
+    should have_imeths  :config_file_exists?, :load_suites
     should have_imeths  :seed_value, :changed_only, :changed_ref, :parallel_workers
     should have_imeths  :verbose, :dry_run, :list, :debug
     should have_imeths  :apply
@@ -87,6 +88,73 @@ class TdotRB::Config
         assert_that(suite).is_instance_of(unit_class::Suite)
         assert_that(suite.default_cmd).includes("CMD ")
       end
+    end
+
+    should "know whether its config file exists" do
+      # the repo root has a `.t.yml`; the test support dir does not
+      assert_that(subject.config_file_exists?).is_true
+
+      Dir.chdir(TEST_SUPPORT_PATH) do
+        assert_that(subject.config_file_exists?).is_false
+      end
+    end
+
+    should "load no suites and no error when there is no config file" do
+      Assert.stub(subject, :config_file_exists?){ false }
+
+      subject.load_suites
+      assert_that(subject.suites).is_empty
+      assert_that(subject.load_error).is_nil
+    end
+
+    should "load no suites and no error from an empty config file" do
+      # an empty file parses as `false`
+      Assert.stub(YAML, :load){ false }
+
+      subject.load_suites
+      assert_that(subject.suites).is_empty
+      assert_that(subject.load_error).is_nil
+    end
+
+    should "hold an error for a config file that is not valid YAML" do
+      Assert.stub(YAML, :load) {
+        raise ::Psych::SyntaxError.new("f", 1, 1, 0, "problem", "context")
+      }
+
+      subject.load_suites
+      assert_that(subject.suites).is_empty
+      assert_that(subject.load_error).is_instance_of(TdotRB::ConfigError)
+      assert_that(subject.load_error.message).includes("is not valid YAML")
+    end
+
+    should "hold an error for a suite that is not a hash" do
+      Assert.stub(YAML, :load){ Factory.string }
+
+      subject.load_suites
+      assert_that(subject.suites).is_empty
+      assert_that(subject.load_error).is_instance_of(TdotRB::ConfigError)
+      assert_that(subject.load_error.message).includes("must be a hash")
+    end
+
+    should "hold an error for a suite missing required settings" do
+      Assert.stub(YAML, :load){ [{ "test_dir" => "test" }] }
+
+      subject.load_suites
+      assert_that(subject.suites).is_empty
+      assert_that(subject.load_error).is_instance_of(TdotRB::ConfigError)
+      assert_that(subject.load_error.message).includes("default_cmd")
+    end
+
+    should "clear a previous load error on a successful load" do
+      results = [Factory.string, [{ "default_cmd" => "CMD" }]]
+      Assert.stub(YAML, :load){ results.shift }
+
+      subject.load_suites
+      assert_that(subject.load_error.nil?).is_false
+
+      subject.load_suites
+      assert_that(subject.load_error).is_nil
+      assert_that(subject.suites.size).equals(1)
     end
 
     should "know how to build debug messages" do
