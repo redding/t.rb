@@ -1,3 +1,11 @@
+## 0.2.0 / 2026-07-31
+
+* update README to suggest using a PREFIX install location 7bd0a6e
+* exit non-zero when a test suite fails #3 fa4a878
+* run on Ruby 3.3.9 2c03855
+* add AGENTS.md and refresh stale README content #4 f2b779a
+* reorient agent notes toward developing the tool b6f5498
+
 ## 0.1.2 / 2021-11-19
 
 * backport Hash#transform_keys to support Ruby 2.4+ fcb4955
