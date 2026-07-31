@@ -9,6 +9,11 @@ require "yaml"
 module TdotRB
   VERSION = "0.2.0"
 
+  # Raised for anything wrong with the config file: unreadable, unparseable,
+  # or the wrong shape. Reported without a backtrace, since it means the
+  # config file needs fixing, not that `t` has a bug.
+  ConfigError = Class.new(StandardError)
+
   class Config
     SUITES_FILE_PATH = "./.t.yml"
 
@@ -23,7 +28,7 @@ module TdotRB
       end
     end
 
-    attr_reader :stdout, :suites, :version
+    attr_reader :stdout, :suites, :version, :load_error
 
     settings :seed_value, :changed_only, :changed_ref, :parallel_workers
     settings :verbose, :dry_run, :list, :debug
@@ -32,6 +37,7 @@ module TdotRB
       @stdout = stdout || $stdout
       @suites = []
       @version = VERSION
+      @load_error = nil
 
       # cli option settings
       @seed_value       = begin; srand; srand % 0xFFFF; end.to_i
@@ -52,13 +58,55 @@ module TdotRB
       end
     end
 
+    def config_file_exists?
+      File.exist?(SUITES_FILE_PATH)
+    end
+
     def load_suites
-      @suites =
-        [YAML.load(File.read(SUITES_FILE_PATH))]
-          .flatten
-          .map { |suite_hash|
-            Suite.new(**suite_hash.transform_keys(&:to_sym))
-          }
+      @load_error = nil
+      return unless config_file_exists?
+
+      @suites = build_suites(read_config_file)
+      nil
+    rescue ConfigError => exception
+      # Hold the error instead of raising it: `--help` and `--version` should
+      # still work when the config file is broken.
+      @load_error = exception
+      @suites     = []
+      nil
+    end
+
+    def read_config_file
+      YAML.load(File.read(SUITES_FILE_PATH))
+    rescue ::Psych::SyntaxError => exception
+      raise ConfigError,
+            "#{SUITES_FILE_PATH} is not valid YAML: #{exception.message}"
+    rescue ::SystemCallError, ::IOError => exception
+      raise ConfigError,
+            "#{SUITES_FILE_PATH} could not be read: #{exception.message}"
+    end
+
+    def build_suites(yaml)
+      # An empty file parses as `false`; treat it as no suites configured.
+      return [] if yaml.nil? || yaml == false
+
+      [yaml].flatten.map { |suite_hash| build_suite(suite_hash) }
+    end
+
+    def build_suite(suite_hash)
+      unless suite_hash.is_a?(::Hash)
+        raise ConfigError,
+              "each suite in #{SUITES_FILE_PATH} must be a hash, "\
+              "got #{suite_hash.class}."
+      end
+
+      begin
+        Suite.new(**suite_hash.transform_keys(&:to_sym))
+      rescue ::ArgumentError => exception
+        raise ConfigError,
+              "a suite in #{SUITES_FILE_PATH} is invalid "\
+              "(#{exception.message})."
+      end
     end
 
     def debug_msg(msg)
@@ -392,7 +440,21 @@ module TdotRB
 
   def self.run
     begin
+      # `--help` and `--version` are handled while parsing, before anything
+      # here needs the config file, so they work in any directory.
       bench("ARGV parse and configure"){ apply(ARGV) }
+
+      unless config.config_file_exists?
+        config.puts missing_config_msg
+        exit(1)
+      end
+
+      if (load_error = config.load_error)
+        config.puts load_error.message
+        config.puts load_error.backtrace.join("\n") if config.debug
+        exit(1)
+      end
+
       # Exit non-zero when any test suite failed, so `t` can gate a commit hook
       # or a CI step instead of only reporting to stdout.
       exit(1) unless Runner.new(clirb.args, config: config).run
@@ -412,10 +474,19 @@ module TdotRB
     exit(0)
   end
 
+  def self.missing_config_msg
+    "No #{Config::SUITES_FILE_PATH} found in #{Dir.pwd}.\n\n"\
+    "Add one to configure how to run tests: "\
+    "https://github.com/redding/t.rb"
+  end
+
   def self.help_msg
     "Usage: t [options] [TESTS]\n\n"\
     "Options:"\
-    "#{clirb}"
+    "#{clirb}\n"\
+    "Config: #{Config::SUITES_FILE_PATH} (test command, dir and file "\
+    "suffixes)\n"\
+    "Exits non-zero when a test suite fails."
   end
 end
 
