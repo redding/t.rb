@@ -7,7 +7,7 @@ require "set"
 require "yaml"
 
 module TdotRB
-  VERSION = "0.2.0"
+  VERSION = "0.2.1"
 
   # Raised for anything wrong with the config file: unreadable, unparseable,
   # or the wrong shape. Reported without a backtrace, since it means the
